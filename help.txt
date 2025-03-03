@@ -1,0 +1,7 @@
+dotnet watch run
+dotnet ef migrations add Initial
+dotnet ef migrations remove
+dotnet ef database update
+
+sqlite open database
+
