@@ -24,19 +24,25 @@
                         </p>
                     </div>
                     <mat-menu #menu="matMenu">
-                        <button [routerLink]="['account',1]" mat-menu-item>
-                            <mat-icon>person</mat-icon>
+                        <button matTooltip="Logout" [routerLink]="['account',userDetail.id]" mat-menu-item>
+                            <mat-icon >person</mat-icon>
                             <span>
                                 View profile
                             </span>
                         </button>
-                        <button (click)="logout()" mat-menu-item>
-                            <mat-icon>logout</mat-icon>
+                        <button matTooltip="Logout" (click)="logout()" mat-menu-item>
+                            <mat-icon >logout</mat-icon>
                             <span>
                                 Logout
                             </span>
                         </button>
                     </mat-menu>
+                    <a *ngIf="userDetail?.roles.includes('admin')" mat-button routerLink="users">
+                        <mat-icon matTooltip="Users">groups</mat-icon>
+                    </a>
+                    <a *ngIf="userDetail?.roles.includes('admin')" mat-button routerLink="roles">
+                        <mat-icon matTooltip="Roles">security</mat-icon>
+                    </a>
                 </div>
             </div>
         }
