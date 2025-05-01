@@ -1,0 +1,32 @@
+<div class="h-screen flex items-center">
+    <div class="conteiner mx-auto max-xl: my-8 bg-white shadow-md rounded-md max-w-md">
+        <h1 class="text-3xl text-gray-700 font-bold mb-4 text-center">
+            Account Details
+        </h1>
+        <div *ngIf="accountDetail$ | async as user">
+            <div class="text-center">
+                <div class="rounded-full bg-amber-500 my-4 text-4xl w-24 h-24 inline-flex items-center justify-center font-bold text-white">
+                    {{user.fullName[0] | uppercase}}
+                </div>
+            </div>
+            <hr class="py-4 border-slate-400">
+            <div class="text-gray-600 font-bold" >Full name</div>
+            <div class="text-gray-800 font-bold" >{{user.fullName}}</div>
+            <div class="text-gray-600 font-bold" >E-mail address</div>
+            <div class="text-gray-800 font-bold" >{{user.email}}</div>
+            <div class="text-gray-600 font-bold" >Roles</div>
+            <div class="text-gray-800 font-bold" >
+                <ul class="flex gap-1 text-xs">
+                    <li *ngFor="let role of user.roles" class="bg-green-800 text-white rounded-md py-1 px-2">
+                        {{role}}
+                    </li>
+                </ul>
+            </div>
+            <div class="text-gray-600 font-bold">Phone number</div>
+            <div class="text-gray-800 font-bold">{{user.phoneNumber || '-'}}</div>
+            <div class="text-gray-600 font-bold">Access failed count</div>
+            <div class="text-gray-800 font-bold">{{user.accessFailedCount}}</div>
+            <div class="text-gray-800 font-bold"><button mat-raised-button class="bg-green-800 text-white mat-raised-button size-full hover:bg-green-900" (click)="openChangePasswordDialog()">Change password</button></div>
+        </div>
+    </div>
+</div>

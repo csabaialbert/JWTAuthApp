@@ -125,6 +125,36 @@ namespace API.Controllers
             return tokenHandler.WriteToken(token);
         }
 
+
+        [Authorize]
+        [HttpPost("changePassword")]
+        public async Task<ActionResult> ChangePassword(ChangePasswordDto changePasswordDto)
+        {
+            var user = await _userManager.FindByEmailAsync(changePasswordDto.Email);
+             if(user is null)
+            {
+                return BadRequest(new AuthResponseDto{
+                    IsSuccess = false,
+                    Message = "User not found " + changePasswordDto.Email.ToString()
+                });
+            }
+            var result = await _userManager.ChangePasswordAsync(user, changePasswordDto.CurrentPassword, changePasswordDto.NewPassword);
+            if(result.Succeeded)
+            {
+                return Ok(new AuthResponseDto{
+                    IsSuccess = true,
+                    Message = "Password changed successfully!"
+                });
+            }
+            else
+            {
+                return BadRequest(new AuthResponseDto{
+                    IsSuccess = false,
+                    Message = "Password change failed!"
+                });
+            }
+        }
+
         [Authorize]
         [HttpGet("detail")]
         public async Task<ActionResult<UserDetailDto>> GetDetails()
