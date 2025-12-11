@@ -1,0 +1,205 @@
+# .github/workflows/ci-cd-pipeline.yml
+
+name: .NET API CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main  # Futtatás main (vagy master) ágra történő push esetén
+    paths:
+      - 'API/**' # Csak akkor fussanak le a .NET API fázisok, ha az API mappában van változás
+
+jobs:
+  # -----------------------------------------------------
+  # 1. CI FÁZIS: Buildelés és Unit Tesztelés
+  # -----------------------------------------------------
+  build_and_test_api:
+    runs-on: ubuntu-latest
+    
+    env: # ÚJ: Környezeti változó hozzáadása
+      TZ: Europe/Budapest
+    steps:
+    
+    # 1. Kód Letöltése
+    - uses: actions/checkout@v4
+    
+    # 2. .NET Környezet Beállítása
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x' 
+        
+    # 3. Függőségek Telepítése és Kód Fordítása (Restore & Build)
+    - name: Restore dependencies and Publish
+      run: dotnet publish API/API.csproj --configuration Release -o publish_output
+      
+    # 4. Unit Tesztek Futtatása (Ez a legfontosabb CI lépés!)
+    - name: Run Unit Tests
+      run: dotnet test JWTAUTH.API.Tests/JWTAUTH.API.Tests.csproj --configuration Release --no-build
+      # A --no-build jelzi, hogy ne fordítsa újra, mert már megtörtént a 3. lépésben
+      
+    # 5. Buildelt Fájlok Mentése (Artifact)
+    - name: Publish API Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: dotnet-api-build
+        path: API/publish_output 
+# -----------------------------------------------------
+  # 2. CI FÁZIS: Angular Buildelés és Tesztelés
+  # -----------------------------------------------------
+  build_angular:
+    runs-on: ubuntu-latest
+    needs: [build_and_test_api] # Csak akkor indul, ha az API sikeres volt
+    
+    defaults:
+      run:
+        working-directory: client # Minden parancsot a 'client' mappában futtatunk
+        
+    steps:
+    - uses: actions/checkout@v4
+    
+    # 1. Node.js Környezet Beállítása (v22.x verzió használatával)
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+        
+    # 2. Függőségek Telepítése
+    - name: Install dependencies
+      run: npm install
+      
+    # 3. Angular Buildelés (Termelési környezetre)
+    - name: Angular Production Build
+      run: npm run build -- --configuration production 
+      
+    # 4. Frontend Artifact Mentése
+    - name: Upload Angular Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: angular-build
+        path: client/dist/client
+  # -----------------------------------------------------
+  # 3. CD FÁZIS: .NET API Docker Image Építése és Publikálása
+  # -----------------------------------------------------
+  docker_api_build:
+    runs-on: ubuntu-latest
+    needs: [build_and_test_api] # Csak akkor indul, ha az API build és Unit Tesztek sikeresek voltak
+    
+    steps:
+    
+    # 1. Kód Letöltése (a Dockerfile miatt)
+    - uses: actions/checkout@v4
+    
+    # 2. Artifact Letöltése (az API publikált fájljai)
+    - name: Download API Build Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: dotnet-api-build
+        path: ./publish_input # Ide töltjük le az Artifact tartalmát
+
+    # 3. Bejelentkezés a GitHub Container Registry-be (GHCR)
+    - name: Log in to GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }} 
+        password: ${{ secrets.GITHUB_TOKEN }} # Ehhez a GitHub Secrets-ben kell beállítani
+        
+    # 4. Docker Image Építése és Feltöltése
+    - name: Build and Push Docker Image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ghcr.io/${{ github.repository }}/jwt-auth-api:latest # Image név GHCR-ben
+        file: ./Dockerfile
+        # Átadjuk a PUBLISH_DIR változót a Dockerfile-nak:
+        build-args: |
+          PUBLISH_DIR=publish_input/API/publish_output
+  # -----------------------------------------------------
+  # 4. CD FÁZIS: Angular Frontend Docker Image Építése
+  # -----------------------------------------------------
+  docker_frontend_build:
+    runs-on: ubuntu-latest
+    needs: [build_angular] # Csak akkor indul, ha az Angular build sikeres volt
+    
+    steps:
+    
+    # 1. Kód Letöltése (a Dockerfile.Frontend miatt)
+    - uses: actions/checkout@v4
+    
+    # 2. Artifact Letöltése (az Angular buildelt fájljai)
+    - name: Download Angular Build Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: angular-build
+        path: ./frontend_input # Ide töltjük le az Angular Artifact tartalmát
+
+    # 3. Bejelentkezés a GHCR-be (az előző lépés már beállította, de ismételjük, ha szükséges)
+    - name: Log in to GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    # 4. Docker Image Építése és Feltöltése
+    - name: Build and Push Frontend Docker Image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ghcr.io/${{ github.repository }}/jwt-auth-frontend:latest # Image név GHCR-ben
+        file: ./Dockerfile.Frontend # Az új Dockerfile-unk
+        # Átadjuk a BUILD ARGUMENT-et a Dockerfile-nak:
+        build-args: |
+          ANGULAR_BUILD_DIR=frontend_input/client/dist/client
+  # -----------------------------------------------------
+  # 5. E2E FÁZIS: End-to-End Tesztelés (Pl. Cypress, Playwright)
+  # -----------------------------------------------------
+  e2e_testing:
+    runs-on: ubuntu-latest
+    # Csak akkor indul, ha MINDEN konténer sikeresen elkészült és felkerült a GHCR-re
+    needs: [docker_api_build, docker_frontend_build] 
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    # 1. Bejelentkezés a GHCR-be
+    # Ahhoz, hogy a docker-compose le tudja húzni a frissen épített image-eket
+    - name: Log in to GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+        
+    # 2. Helyi Tesztkörnyezet Felépítése
+    - name: Start Docker Compose Environment
+      run: |
+        # ⚠️ Fontos: A YOUR_IMAGE_PLACEHOLDER lecserélése a valós GHCR útvonalra
+        API_IMAGE=ghcr.io/${{ github.repository }}/jwt-auth-api:latest
+        FRONTEND_IMAGE=ghcr.io/${{ github.repository }}/jwt-auth-frontend:latest
+        
+        sed -i "s|YOUR_API_IMAGE|$API_IMAGE|g" docker-compose.yml
+        sed -i "s|YOUR_FRONTEND_IMAGE|$FRONTEND_IMAGE|g" docker-compose.yml
+        
+        docker compose pull # Lehúzza a frissen feltöltött image-eket
+        docker compose up -d # Elindítja a két konténert háttérben
+        
+    # 3. Készenléti Idő (Várjuk meg, amíg az API és a Frontend feláll)
+    - name: Wait for services to be ready
+      run: sleep 30 # Ezt az időt lehet, hogy finomítani kell a valós működés során
+      
+    # 4. E2E Tesztek Futtatása
+    # Itt futtatjuk a teszteket a futó 4200-as (frontend) és 5000-es (API) port ellen
+    - name: Run E2E Tests (Cypress/Playwright)
+      run: |
+        npm install
+        npm run e2e # Feltételezve, hogy a 'client' mappa gyökerében van E2E teszt futtató szkript
+      working-directory: client
+      
+    # 5. Tisztítás (Kötelező lépés: Leállítjuk a konténereket)
+    - name: Clean up Docker Compose
+      if: always() # Mindig fusson le, még hiba esetén is, hogy ne fogyasszon erőforrást
+      run: docker compose down
