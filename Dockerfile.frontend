@@ -1,0 +1,16 @@
+# Dockerfile.Frontend
+
+# Nginx alapú image-et használunk a statikus fájlok kiszolgálásához
+FROM nginx:alpine AS final
+
+# Konténer munkakönyvtárának beállítása
+WORKDIR /usr/share/nginx/html
+
+# Másolás: BUILD ARGUMENT fogja injektálni az Angular buildelt mappát.
+ARG ANGULAR_BUILD_DIR
+# A fájlokat onnan másoljuk az Nginx default kiszolgálási helyére
+COPY ${ANGULAR_BUILD_DIR}/ .
+
+# A konténer alapértelmezett Nginx szervert indítja el
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

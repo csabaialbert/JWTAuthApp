@@ -1,0 +1,26 @@
+# docker-compose.yml
+
+version: '3.8'
+services:
+  # .NET API SZOLGÁLTATÁS
+  api:
+    # A helyére a GH Actions fogja behelyettesíteni az image nevet
+    image: YOUR_API_IMAGE 
+    # Mivel a Dockerfile-ban nem adtunk meg portot, feltételezzük, hogy az ASP.NET Core
+    # egy belső 8080-as (vagy 80-as) porton fut. Itt a külső 5000-re képezzük le.
+    ports:
+      - "5000:8080"
+    environment:
+      # Fontos: A konténeren belül beállítjuk, hogy a 8080-as portot figyelje
+      - ASPNETCORE_URLS=http://+:8080
+      # IDE KELL MAJD A TÉNYLEGES ADATBÁZIS CONNECTION STRING ÉLES KÖRNYEZETRE!
+      
+  # ANGULAR FRONTEND SZOLGÁLTATÁS
+  frontend:
+    image: YOUR_FRONTEND_IMAGE 
+    # A Frontend Nginx alapértelmezetten 80-on fut. A külső 4200-ra képezzük le.
+    ports:
+      - "4200:80"
+    # Ez garantálja, hogy a Frontend csak az API felállása után induljon el
+    depends_on:
+      - api
