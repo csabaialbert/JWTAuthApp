@@ -47,7 +47,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: dotnet-api-build
-        path: API/publish_output 
+        path: publish_output 
 # -----------------------------------------------------
   # 2. CI FÁZIS: Angular Buildelés és Tesztelés
   # -----------------------------------------------------
@@ -99,7 +99,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: dotnet-api-build
-        path: ./publish_input # Ide töltjük le az Artifact tartalmát
+        path: publish_input # Ide töltjük le az Artifact tartalmát
 
     # 3. Bejelentkezés a GitHub Container Registry-be (GHCR)
     - name: Log in to GHCR
@@ -119,7 +119,7 @@ jobs:
         file: ./Dockerfile
         # Átadjuk a PUBLISH_DIR változót a Dockerfile-nak:
         build-args: |
-          PUBLISH_DIR=publish_input/API/publish_output
+          PUBLISH_DIR=publish_input/publish_output
   # -----------------------------------------------------
   # 4. CD FÁZIS: Angular Frontend Docker Image Építése
   # -----------------------------------------------------
