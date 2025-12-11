@@ -7,7 +7,11 @@ on:
     branches:
       - main  # Futtatás main (vagy master) ágra történő push esetén
     paths:
-      - 'API/**' # Csak akkor fussanak le a .NET API fázisok, ha az API mappában van változás
+      - 'API/**'
+      - 'client/**'
+      - 'Dockerfile*'
+      - 'docker-compose.yml'
+      - '.github/workflows/**'
 
 jobs:
   # -----------------------------------------------------
