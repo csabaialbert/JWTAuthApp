@@ -89,10 +89,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build_and_test_api] # Csak akkor indul, ha az API build és Unit Tesztek sikeresek voltak
 
-    env:
-      REPO TAG: ghcr.io/${{ github.repository | lower }}/jwt-auth-api:latest
-    
     steps:
+
+    #0. Kisbetűs repo-név kinyerése
+    - name: Get Lowercase Repository Name
+      id: repo__name_step
+      run: echo "repo_name=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
     
     # 1. Kód Letöltése (a Dockerfile miatt)
     - uses: actions/checkout@v4
@@ -118,7 +120,7 @@ jobs:
       with:
         context: .
         push: true
-        tags: ${{ env.REPO_TAG }} # Image név GHCR-ben
+        tags: ghcr.io/${{ steps.repo_name_step.outputs.repo_name }}/jwt-auth-frontend:latest # Image név GHCR-ben
         file: ./Dockerfile
         # Átadjuk a PUBLISH_DIR változót a Dockerfile-nak:
         build-args: |
