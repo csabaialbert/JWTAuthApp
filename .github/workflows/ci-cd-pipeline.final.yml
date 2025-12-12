@@ -115,7 +115,7 @@ jobs:
       with:
         context: .
         push: true
-        tags: ghcr.io/${{ github.repository | lower }}/jwt-auth-api:latest # Image név GHCR-ben
+        tags: ghcr.io/${{ github.repository }}/jwt-auth-api:latest # Image név GHCR-ben
         file: ./Dockerfile
         # Átadjuk a PUBLISH_DIR változót a Dockerfile-nak:
         build-args: |
@@ -153,7 +153,7 @@ jobs:
       with:
         context: .
         push: true
-        tags: ghcr.io/${{ github.repository }}/jwt-auth-frontend:latest # Image név GHCR-ben
+        tags: ghcr.io/${{ github.repository | lower }}/jwt-auth-frontend:latest # Image név GHCR-ben
         file: ./Dockerfile.Frontend # Az új Dockerfile-unk
         # Átadjuk a BUILD ARGUMENT-et a Dockerfile-nak:
         build-args: |
