@@ -120,7 +120,7 @@ jobs:
       with:
         context: .
         push: true
-        tags: ghcr.io/${{ steps.repo_name_step.outputs.repo_name }}/jwt-auth-frontend:latest # Image név GHCR-ben
+        tags: ghcr.io/${{ steps.repo_name_step.outputs.repo_name }}/jwt-auth-api:latest # Image név GHCR-ben
         file: ./Dockerfile
         # Átadjuk a PUBLISH_DIR változót a Dockerfile-nak:
         build-args: |
