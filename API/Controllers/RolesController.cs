@@ -26,6 +26,7 @@ namespace API.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> CreateRole([FromBody] CreateRoleDto createRoleDto)
         {
             if(string.IsNullOrEmpty(createRoleDto.RoleName))
