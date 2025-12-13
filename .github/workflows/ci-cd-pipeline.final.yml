@@ -70,7 +70,7 @@ jobs:
         run: npm install
 
       - name: Angular Production Build
-        run: npm run build -- --configuration production
+        run: npm run build -- --configuration production --output-path dist/client
 
       # defaults.working-directory miatt itt elég a dist/client
       - name: Upload Angular Artifact
