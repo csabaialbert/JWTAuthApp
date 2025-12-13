@@ -148,7 +148,7 @@ static async Task SeedAsync(WebApplication app)
     var userManager = services.GetRequiredService<UserManager<AppUser>>();
 
     // --- Role-ok ---
-    string[] roles = { "Admin", "User" };
+    string[] roles = { "admin", "user" };
     foreach (var r in roles)
     {
         if (!await roleManager.RoleExistsAsync(r))
@@ -164,7 +164,7 @@ static async Task SeedAsync(WebApplication app)
         var createRes = await userManager.CreateAsync(admin, "Admin123!");
         if (createRes.Succeeded)
         {
-            await userManager.AddToRoleAsync(admin, "Admin");
+            await userManager.AddToRoleAsync(admin, "admin");
         }
     }
 }
