@@ -135,4 +135,39 @@ app.Use(async (context, next) =>
 app.MapControllers();
 app.MapMetrics();
 app.MapHealthChecks("/health");
+
+static async Task SeedAsync(WebApplication app)
+{
+    using var scope = app.Services.CreateScope();
+    var services = scope.ServiceProvider;
+
+    var db = services.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync(); // <- ez hozza létre/frissíti a DB-t
+
+    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = services.GetRequiredService<UserManager<AppUser>>();
+
+    // --- Role-ok ---
+    string[] roles = { "Admin", "User" };
+    foreach (var r in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(r))
+            await roleManager.CreateAsync(new IdentityRole(r));
+    }
+
+    // --- Opcionális: default admin user ---
+    var adminEmail = "admin@local";
+    var admin = await userManager.FindByEmailAsync(adminEmail);
+    if (admin == null)
+    {
+        admin = new AppUser { UserName = adminEmail, Email = adminEmail };
+        var createRes = await userManager.CreateAsync(admin, "Admin123!");
+        if (createRes.Succeeded)
+        {
+            await userManager.AddToRoleAsync(admin, "Admin");
+        }
+    }
+}
+
+await SeedAsync(app);
 app.Run();
