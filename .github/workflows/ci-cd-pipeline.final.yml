@@ -77,7 +77,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: angular-build
-          path: dist/client
+          path: client/dist/client
 
   # -----------------------------------------------------
   # 3. CD FÁZIS: .NET API Docker Image Build & Push
