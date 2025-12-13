@@ -94,11 +94,6 @@ c.AddSecurityRequirement(new OpenApiSecurityRequirement(){
 }
 );
 builder.Services.AddHealthChecks();
-builder.Services.AddLogging(options =>
-{
-    options.AddConsole();  // Logs to console
-    options.AddDebug();    // Logs to debug output
-});
 
 var app = builder.Build();
 
