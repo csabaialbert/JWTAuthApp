@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
 var JWTSetting = builder.Configuration.GetSection("JWTSetting");
@@ -92,6 +93,7 @@ c.AddSecurityRequirement(new OpenApiSecurityRequirement(){
 }});
 }
 );
+builder.Services.AddHealthChecks();
 builder.Services.AddLogging(options =>
 {
     options.AddConsole();  // Logs to console
@@ -114,6 +116,7 @@ app.UseCors(options =>
     options.AllowAnyMethod();
     options.AllowAnyOrigin();
 });
+app.UseHttpMetrics();
 app.UseAuthentication();
 app.UseAuthorization();
 app.Use(async (context, next) =>
@@ -134,5 +137,6 @@ app.Use(async (context, next) =>
     await next();
 });
 app.MapControllers();
-
+app.MapMetrics();
+app.MapHealthChecks("/health");
 app.Run();

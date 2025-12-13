@@ -1,26 +1,51 @@
-# docker-compose.yml
+version: "3.8"
 
-version: '3.8'
 services:
-  # .NET API SZOLGÁLTATÁS
   api:
-    # A helyére a GH Actions fogja behelyettesíteni az image nevet
-    image: YOUR_API_IMAGE 
-    # Mivel a Dockerfile-ban nem adtunk meg portot, feltételezzük, hogy az ASP.NET Core
-    # egy belső 8080-as (vagy 80-as) porton fut. Itt a külső 5000-re képezzük le.
+    image: ghcr.io/csabaialbert/jwtauthapp/jwt-auth-api:latest
     ports:
       - "5000:8080"
     environment:
-      # Fontos: A konténeren belül beállítjuk, hogy a 8080-as portot figyelje
       - ASPNETCORE_URLS=http://+:8080
-      # IDE KELL MAJD A TÉNYLEGES ADATBÁZIS CONNECTION STRING ÉLES KÖRNYEZETRE!
-      
-  # ANGULAR FRONTEND SZOLGÁLTATÁS
+    restart: unless-stopped
+
   frontend:
-    image: YOUR_FRONTEND_IMAGE 
-    # A Frontend Nginx alapértelmezetten 80-on fut. A külső 4200-ra képezzük le.
+    image: ghcr.io/csabaialbert/jwtauthapp/jwt-auth-frontend:latest
     ports:
       - "4200:80"
-    # Ez garantálja, hogy a Frontend csak az API felállása után induljon el
     depends_on:
       - api
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - --web.enable-lifecycle
+      - --config.file=/etc/prometheus/prometheus.yml
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=adminpass
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+volumes:
+  prometheus_data:
+  grafana_data:
