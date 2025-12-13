@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "KvtAi0xfoec=",
+  "dgSpecHash": "1qPypBrloik=",
   "success": true,
   "projectFilePath": "C:\\Users\\Albi\\Desktop\\JwtAuth\\API\\API.csproj",
   "expectedPackageFiles": [
@@ -34,6 +34,11 @@
     "C:\\Users\\Albi\\.nuget\\packages\\microsoft.extensions.dependencyinjection\\9.0.1\\microsoft.extensions.dependencyinjection.9.0.1.nupkg.sha512",
     "C:\\Users\\Albi\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\9.0.1\\microsoft.extensions.dependencyinjection.abstractions.9.0.1.nupkg.sha512",
     "C:\\Users\\Albi\\.nuget\\packages\\microsoft.extensions.dependencymodel\\9.0.1\\microsoft.extensions.dependencymodel.9.0.1.nupkg.sha512",
+    "C:\\Users\\Albi\\.nuget\\packages\\microsoft.extensions.diagnostics.abstractions\\9.0.1\\microsoft.extensions.diagnostics.abstractions.9.0.1.nupkg.sha512",
+    "C:\\Users\\Albi\\.nuget\\packages\\microsoft.extensions.diagnostics.healthchecks\\9.0.1\\microsoft.extensions.diagnostics.healthchecks.9.0.1.nupkg.sha512",
+    "C:\\Users\\Albi\\.nuget\\packages\\microsoft.extensions.diagnostics.healthchecks.abstractions\\9.0.1\\microsoft.extensions.diagnostics.healthchecks.abstractions.9.0.1.nupkg.sha512",
+    "C:\\Users\\Albi\\.nuget\\packages\\microsoft.extensions.fileproviders.abstractions\\9.0.1\\microsoft.extensions.fileproviders.abstractions.9.0.1.nupkg.sha512",
+    "C:\\Users\\Albi\\.nuget\\packages\\microsoft.extensions.hosting.abstractions\\9.0.1\\microsoft.extensions.hosting.abstractions.9.0.1.nupkg.sha512",
     "C:\\Users\\Albi\\.nuget\\packages\\microsoft.extensions.http\\3.1.0\\microsoft.extensions.http.3.1.0.nupkg.sha512",
     "C:\\Users\\Albi\\.nuget\\packages\\microsoft.extensions.identity.core\\9.0.1\\microsoft.extensions.identity.core.9.0.1.nupkg.sha512",
     "C:\\Users\\Albi\\.nuget\\packages\\microsoft.extensions.identity.stores\\9.0.1\\microsoft.extensions.identity.stores.9.0.1.nupkg.sha512",
