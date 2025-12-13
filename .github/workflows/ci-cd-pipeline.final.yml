@@ -28,24 +28,19 @@ jobs:
       TZ: Europe/Budapest
 
     steps:
-      # 1. Kód Letöltése
       - uses: actions/checkout@v4
 
-      # 2. .NET Környezet Beállítása
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
 
-      # 3. Függőségek Telepítése és Kód Fordítása (Restore & Publish)
       - name: Restore dependencies and Publish
         run: dotnet publish API/API.csproj --configuration Release -o publish_output
 
-      # 4. Unit Tesztek Futtatása
       - name: Run Unit Tests
         run: dotnet test JWTAUTH.API.Tests/JWTAUTH.API.Tests.csproj --configuration Release --no-build
 
-      # 5. Buildelt Fájlok Mentése (Artifact)
       - name: Publish API Build Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -53,7 +48,7 @@ jobs:
           path: publish_output
 
   # -----------------------------------------------------
-  # 2. CI FÁZIS: Angular Buildelés és Tesztelés
+  # 2. CI FÁZIS: Angular Buildelés
   # -----------------------------------------------------
   build_angular:
     runs-on: ubuntu-latest
@@ -66,51 +61,44 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 1. Node.js Környezet Beállítása
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22.x'
 
-      # 2. Függőségek Telepítése
       - name: Install dependencies
         run: npm install
 
-      # 3. Angular Buildelés (Termelési környezetre)
       - name: Angular Production Build
         run: npm run build -- --configuration production
 
-      # 4. Frontend Artifact Mentése
+      # defaults.working-directory miatt itt elég a dist/client
       - name: Upload Angular Artifact
         uses: actions/upload-artifact@v4
         with:
           name: angular-build
-          path: client/dist/client
+          path: dist/client
 
   # -----------------------------------------------------
-  # 3. CD FÁZIS: .NET API Docker Image Építése és Publikálása
+  # 3. CD FÁZIS: .NET API Docker Image Build & Push
   # -----------------------------------------------------
   docker_api_build:
     runs-on: ubuntu-latest
     needs: [build_and_test_api]
 
     steps:
-      # 0. Kisbetűs repo-név kinyerése (EGYSÉGES STEP ID!)
       - name: Get Lowercase Repository Name
         id: repo_name_step
         run: echo "repo_name=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
-      # 1. Kód Letöltése (a Dockerfile miatt)
       - uses: actions/checkout@v4
 
-      # 2. Artifact Letöltése (az API publikált fájljai)
       - name: Download API Build Artifact
         uses: actions/download-artifact@v4
         with:
           name: dotnet-api-build
           path: publish_input
 
-      # 3. Bejelentkezés a GitHub Container Registry-be (GHCR)
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -118,7 +106,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 4. Docker Image Építése és Feltöltése
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
@@ -127,32 +114,28 @@ jobs:
           tags: ghcr.io/${{ steps.repo_name_step.outputs.repo_name }}/jwt-auth-api:latest
           file: ./Dockerfile
           build-args: |
-            PUBLISH_DIR=publish_input/publish_output
+            PUBLISH_DIR=publish_input
 
   # -----------------------------------------------------
-  # 4. CD FÁZIS: Angular Frontend Docker Image Építése
+  # 4. CD FÁZIS: Angular Frontend Docker Image Build & Push
   # -----------------------------------------------------
   docker_frontend_build:
     runs-on: ubuntu-latest
     needs: [build_angular]
 
     steps:
-      # 0. Kisbetűs repo-név kinyerése (EGYSÉGES STEP ID!)
       - name: Get Lowercase Repository Name
         id: repo_name_step
         run: echo "repo_name=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
-      # 1. Kód Letöltése (a Dockerfile.Frontend miatt)
       - uses: actions/checkout@v4
 
-      # 2. Artifact Letöltése (az Angular buildelt fájljai)
       - name: Download Angular Build Artifact
         uses: actions/download-artifact@v4
         with:
           name: angular-build
           path: ./frontend_input
 
-      # 3. Bejelentkezés a GHCR-be
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -160,16 +143,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 4. Docker Image Építése és Feltöltése
       - name: Build and Push Frontend Docker Image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           tags: ghcr.io/${{ steps.repo_name_step.outputs.repo_name }}/jwt-auth-frontend:latest
-          file: ./Dockerfile.Frontend
+          file: ./Dockerfile.frontend
           build-args: |
-            ANGULAR_BUILD_DIR=frontend_input/client/dist/client
+            ANGULAR_BUILD_DIR=frontend_input
 
   # -----------------------------------------------------
   # 5. E2E FÁZIS: End-to-End Tesztelés
@@ -181,12 +163,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 0. Kisbetűs repo-név kinyerése (E2E-hez is!)
       - name: Get Lowercase Repository Name
         id: repo_name_step
         run: echo "repo_name=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
-      # 1. Bejelentkezés a GHCR-be
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -194,7 +174,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 2. Helyi Tesztkörnyezet Felépítése
       - name: Start Docker Compose Environment
         run: |
           API_IMAGE=ghcr.io/${{ steps.repo_name_step.outputs.repo_name }}/jwt-auth-api:latest
@@ -206,18 +185,15 @@ jobs:
           docker compose pull
           docker compose up -d
 
-      # 3. Készenléti Idő
       - name: Wait for services to be ready
         run: sleep 30
 
-      # 4. E2E Tesztek Futtatása
       - name: Run E2E Tests (Cypress/Playwright)
         run: |
           npm install
           npm run e2e
         working-directory: client
 
-      # 5. Tisztítás
       - name: Clean up Docker Compose
         if: always()
         run: docker compose down
