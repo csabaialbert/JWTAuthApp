@@ -35,6 +35,9 @@ A projekt célja egy modern, biztonságorientált Full-stack architektúra demon
 
 # Projekt felépítése
 
+# Projekt felépítése
+
+```text
 ├── API/                    # ASP.NET Core Web API
 ├── client/                 # Angular frontend
 ├── Dockerfile              # API Docker image
@@ -43,6 +46,7 @@ A projekt célja egy modern, biztonságorientált Full-stack architektúra demon
 ├── prometheus.yml          # Prometheus konfiguráció
 ├── default.conf            # Nginx SPA konfiguráció
 └── .github/workflows/      # CI/CD pipeline
+```
 
 
 # Futattás lokálisan (Docker Compose)
