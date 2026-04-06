@@ -4,7 +4,7 @@ Ez a projekt egy egyszerű JWT-alapú autentikációs rendszer, amely
 .NET API-ból és Angular frontendből áll, Docker konténerekben fut,
 CI/CD pipeline-nal és alap monitoring megoldással kiegészítve.
 
-A projekt oktatási / beadandó célra készült.
+A projekt célja egy modern, biztonságorientált Full-stack architektúra demonstrálása, fókuszban a felhőalapú natív fejlesztéssel (Cloud-native), a konténerizációval és az automatizált CI/CD folyamatokkal.
 
 # Technológiai stack
 
@@ -28,7 +28,10 @@ A projekt oktatási / beadandó célra készült.
 - GitHub Container Registry (GHCR)
 - Prometheus
 - Grafana
-
+### Biztonsági jellemzők:
+- Secure JWT Handling: Token alapú hitelesítés érvényességi idővel (Expiration) és biztonságos tárolási mechanizmusokkal.
+- Role-Based Access Control (RBAC): Készen áll a szerepkör alapú hozzáférés-szabályozás integrálására a backend oldalon.
+- Secure Header Management: Nginx konfiguráció a biztonságos HTTP fejlécek kezeléséhez.
 
 # Projekt felépítése
 
@@ -90,3 +93,7 @@ A pipeline:
 3. Docker image-ek készítése
 4. Image-ek publikálása GitHub Container Registry-be
 5. E2E tesztelés Docker Compose segítségével
+
+## Kiegészítés:
+### Automated Quality Gate: A pipeline megakadályozza a hibás kód élesítését a Unit és E2E tesztek automatikus futtatásával minden Pull Request esetén.
+
